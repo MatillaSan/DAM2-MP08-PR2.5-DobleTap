@@ -2,33 +2,39 @@ package com.example.dam2_mp08_pr25_dobletap;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.annotation.SuppressLint;
+import static java.lang.String.valueOf;
+
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+
+import androidx.fragment.app.Fragment;
+
+import android.os.SystemClock;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
     private SensorManager sensorManager;
     private Sensor sensor;
     SensorEventListener sensorListener;
-    private TextView xValue;
-    private TextView yValue;
-    private TextView zValue;
+    private long tiempoAnterior = 0;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        xValue = findViewById(R.id.xValue);
-        yValue = findViewById(R.id.yValue);
-        zValue = findViewById(R.id.zValue);
+        TextView xValue = findViewById(R.id.xValue);
+        TextView yValue = findViewById(R.id.yValue);
+        TextView zValue = findViewById(R.id.zValue);
 
         sensorListener = new SensorEventListener() {
-            @SuppressLint("SetTextI18n")
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
                 // Valors de l'acceleròmetre en m/s^2
@@ -40,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
                 yValue.setText(((Float)yAcc).toString());
                 zValue.setText(((Float)zAcc).toString());
 
-                // Processament o visualització de dades...
+                detectarDobleTap(zAcc);
             }
 
             @Override
@@ -57,6 +63,18 @@ public class MainActivity extends AppCompatActivity {
         if( sensor!=null ) {
             sensorManager.registerListener(sensorListener,sensor,
                     SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
+    private void detectarDobleTap(float zAcc) {
+        long actual = SystemClock.uptimeMillis();
+        long intervalo = actual - tiempoAnterior;
+
+        if (zAcc < -9.5 && intervalo < 1200) {
+            Toast.makeText(this, "Double Tap Detected!", Toast.LENGTH_SHORT).show();
+            tiempoAnterior = 0; // Reset last tap time after detecting double tap
+        } else if (zAcc < -9.5) {
+            tiempoAnterior = actual;
         }
     }
 }
